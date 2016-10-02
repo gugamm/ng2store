@@ -4,6 +4,9 @@ import { Observable }   from 'rxjs/Observable';
 
 /***********************************************
  *
+ * ASYNC STORE PATTERN
+ *   Created by Gustavo Martins
+ *
  * Description
  *   This pattern is a mix of Flux, Redux and Observable Services
  *   You can create Stores. Each one contains a StorePayload
