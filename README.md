@@ -34,7 +34,7 @@ A StoreState is an enum that has these possible values:
 ##### StorePayload
 A StorePayload is an interface exposing a StoreState and the data(anything)
 
-### Manipulating Store Data With A Action Service
+### Manipulating Store Data With An Action Service
 Stores does not provide methods to update their data. So how do we update them? What if we want to make an api call to update them? What if we want to initialize them after something has happen?
 
 We do that using *Actions*
