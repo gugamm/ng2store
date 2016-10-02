@@ -106,6 +106,77 @@ export class TodosStore implements Store<Todo[]> {
 }
 ```
 
+#### Store Dependencies
+What if an Action of a Store depends on other Stores to be initialized, or that some actions execute before it?
+
+Thats why DependencyResolver stands for. It is an advanced feature that has been added in the last version. It allows you to solve your dependencies(sync and async) in a cleaver way.
+
+**Example**
+```typescript
+
+const logDependency = () => {
+  console.log('This is a dependency');
+};
+
+const asyncDependency = () => {
+  return Observable.create((observer : Observer<any>) => {
+    setTimeout(() => observer.complete(), 3000);
+  });
+};
+
+const storeDependency = (counterStore : CounterStore) => {
+  return Observable.create((observer : Observer<any>) => {
+    //could be a http request here
+    setTimeout(() => {
+      counterStore.setData(counterStore.payload.data + 1);
+    }, 3000);
+  });
+};
+
+@Injectable()
+export class TodoActions {
+  public constructor(private _store : TodosStore, private _depResolver : DependencyResolver) {}
+
+  public addTodoSync(todo : Todo) : void {
+    this._depResolver.resolveActionDependencies([
+      {
+        resolve : logDependency 
+      }
+    ].subscribe(() => this._store.setData([...this._store.payload.data, todo]));
+  }
+  
+  public addTodoAsync(todo : Todo) : Observable<any> {
+    let observable = (observer : Observer<any>) => {
+      let actionDependencies = this._depResolver.resolveActionDependencies([{resolve : logDependency}, {resolve : asyncDependency}]);
+      let storeDependencies = this._depResolver.resolveStoreDependencies([{ dependency : CounterStore, resolve : storeDependency}]);
+      Observable.zip(actionDependencies,storeDependencies).subscribe(
+        () => {
+          this._store.setStoreState(StoreState.updating);
+
+          //could be a http request here
+          let timeoutId = setTimeout(
+            () => {
+              this._store.setData([...this._store.payload.data, todo]);
+              observer.next(null);
+              observer.complete();
+            },2000);
+
+            return () => {
+              clearTimeout(timeoutId);
+              this._store.setStoreState(StoreState.interrupted);
+            };
+       },
+       (error : any) => {
+         console.log('error');
+       });
+    }
+    
+    return Observable.create(observable);
+  }
+}
+```
+
+
 License
 ----
 
